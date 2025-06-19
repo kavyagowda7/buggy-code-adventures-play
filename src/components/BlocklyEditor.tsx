@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 
 const BlocklyEditor = forwardRef((props, ref) => {
@@ -10,7 +9,7 @@ const BlocklyEditor = forwardRef((props, ref) => {
       if (workspace.current) {
         return generateJavaScriptCode(workspace.current);
       }
-      return '';
+      return [];
     }
   }));
 
@@ -22,7 +21,7 @@ const BlocklyEditor = forwardRef((props, ref) => {
   }, []);
 
   const initializeBlockly = () => {
-    // Create a simple visual block interface
+    // ... keep existing code (container creation and innerHTML setup)
     const container = blocklyDiv.current;
     if (!container) return;
 
@@ -60,6 +59,7 @@ const BlocklyEditor = forwardRef((props, ref) => {
   };
 
   const setupDragAndDrop = () => {
+    // ... keep existing code (toolbox and workspace setup)
     const toolboxItems = blocklyDiv.current?.querySelectorAll('.block-item');
     const workspace = blocklyDiv.current?.querySelector('#code-blocks');
 
@@ -102,47 +102,68 @@ const BlocklyEditor = forwardRef((props, ref) => {
   };
 
   const addBlockToWorkspace = (command: string, html: string) => {
-    const workspace = blocklyDiv.current?.querySelector('#code-blocks');
-    if (!workspace) return;
+    const workspaceElement = blocklyDiv.current?.querySelector('#code-blocks');
+    if (!workspaceElement) return;
 
-    // Remove placeholder text
-    const placeholder = workspace.querySelector('p');
+    // Remove placeholder text if it exists
+    const placeholder = workspaceElement.querySelector('p.text-gray-500');
     if (placeholder) {
       placeholder.remove();
     }
 
-    // Create new block element
-    const blockDiv = document.createElement('div');
-    blockDiv.innerHTML = html;
-    const blockElement = blockDiv.firstElementChild as HTMLElement;
+    // Create a new block element directly instead of parsing HTML
+    const blockElement = document.createElement('div');
+    blockElement.className = 'workspace-block bg-blue-500 text-white p-3 rounded-lg cursor-pointer mb-2 flex items-center justify-between';
+    blockElement.setAttribute('data-command', command);
     
-    if (blockElement) {
-      // Ensure the command data attribute is preserved
-      blockElement.setAttribute('data-command', command);
-      blockElement.classList.add('workspace-block');
-      blockElement.draggable = false;
-      
-      // Add delete button
-      const deleteBtn = document.createElement('button');
-      deleteBtn.innerHTML = '❌';
-      deleteBtn.className = 'ml-2 text-red-500 hover:text-red-700';
+    // Set the content based on command
+    let blockContent = '';
+    switch(command) {
+      case 'moveForward':
+        blockContent = '➡️ Move Forward';
+        blockElement.className = 'workspace-block bg-blue-500 text-white p-3 rounded-lg cursor-pointer mb-2 flex items-center justify-between';
+        break;
+      case 'turnLeft':
+        blockContent = '↩️ Turn Left';
+        blockElement.className = 'workspace-block bg-green-500 text-white p-3 rounded-lg cursor-pointer mb-2 flex items-center justify-between';
+        break;
+      case 'turnRight':
+        blockContent = '↪️ Turn Right';
+        blockElement.className = 'workspace-block bg-orange-500 text-white p-3 rounded-lg cursor-pointer mb-2 flex items-center justify-between';
+        break;
+      case 'repeat':
+        blockContent = '🔄 Repeat 3 times';
+        blockElement.className = 'workspace-block bg-purple-500 text-white p-3 rounded-lg cursor-pointer mb-2 flex items-center justify-between';
+        break;
+      default:
+        blockContent = command;
+    }
+    
+    blockElement.innerHTML = `
+      <span>${blockContent}</span>
+      <button class="ml-2 text-red-200 hover:text-red-100 text-lg">❌</button>
+    `;
+    
+    // Add delete functionality
+    const deleteBtn = blockElement.querySelector('button');
+    if (deleteBtn) {
       deleteBtn.onclick = () => {
         blockElement.remove();
         // If no blocks left, show placeholder
-        const remainingBlocks = workspace.querySelectorAll('.workspace-block');
+        const remainingBlocks = workspaceElement.querySelectorAll('.workspace-block');
         if (remainingBlocks.length === 0) {
-          workspace.innerHTML = '<p class="text-gray-500 italic">Drop blocks here to build your code!</p>';
+          workspaceElement.innerHTML = '<p class="text-gray-500 italic">Drop blocks here to build your code!</p>';
         }
       };
-      blockElement.appendChild(deleteBtn);
-      
-      workspace.appendChild(blockElement);
-      console.log('Added block with command:', command);
     }
+    
+    workspaceElement.appendChild(blockElement);
+    console.log('Added block with command:', command);
   };
 
   const generateJavaScriptCode = (workspace: any) => {
-    const blocks = blocklyDiv.current?.querySelectorAll('.workspace-block');
+    const workspaceElement = blocklyDiv.current?.querySelector('#code-blocks');
+    const blocks = workspaceElement?.querySelectorAll('.workspace-block');
     const commands: string[] = [];
     
     console.log('Found blocks:', blocks?.length);
