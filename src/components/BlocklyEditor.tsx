@@ -64,24 +64,28 @@ const BlocklyEditor = forwardRef((props, ref) => {
     const workspace = blocklyDiv.current?.querySelector('#code-blocks');
 
     toolboxItems?.forEach(item => {
-      item.addEventListener('dragstart', (e: any) => {
-        e.dataTransfer.setData('text/plain', e.target.dataset.command);
-        e.dataTransfer.setData('text/html', e.target.outerHTML);
+      item.addEventListener('dragstart', (e: DragEvent) => {
+        const target = e.target as HTMLElement;
+        e.dataTransfer?.setData('text/plain', target.dataset.command || '');
+        e.dataTransfer?.setData('text/html', target.outerHTML);
       });
     });
 
-    workspace?.addEventListener('dragover', (e) => {
+    workspace?.addEventListener('dragover', (e: DragEvent) => {
       e.preventDefault();
-      e.currentTarget?.classList.add('border-blue-400', 'bg-blue-50');
+      const target = e.currentTarget as HTMLElement;
+      target.classList.add('border-blue-400', 'bg-blue-50');
     });
 
-    workspace?.addEventListener('dragleave', (e) => {
-      e.currentTarget?.classList.remove('border-blue-400', 'bg-blue-50');
+    workspace?.addEventListener('dragleave', (e: DragEvent) => {
+      const target = e.currentTarget as HTMLElement;
+      target.classList.remove('border-blue-400', 'bg-blue-50');
     });
 
-    workspace?.addEventListener('drop', (e) => {
+    workspace?.addEventListener('drop', (e: DragEvent) => {
       e.preventDefault();
-      e.currentTarget?.classList.remove('border-blue-400', 'bg-blue-50');
+      const target = e.currentTarget as HTMLElement;
+      target.classList.remove('border-blue-400', 'bg-blue-50');
       
       const command = e.dataTransfer?.getData('text/plain');
       const html = e.dataTransfer?.getData('text/html');
@@ -126,13 +130,17 @@ const BlocklyEditor = forwardRef((props, ref) => {
     const blocks = blocklyDiv.current?.querySelectorAll('.workspace-block');
     const commands: string[] = [];
     
+    console.log('Found blocks:', blocks?.length);
+    
     blocks?.forEach(block => {
       const command = block.getAttribute('data-command');
+      console.log('Block command:', command);
       if (command) {
         commands.push(command);
       }
     });
     
+    console.log('Generated commands:', commands);
     return commands;
   };
 
