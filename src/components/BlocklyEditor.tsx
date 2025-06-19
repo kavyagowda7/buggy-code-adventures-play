@@ -66,8 +66,10 @@ const BlocklyEditor = forwardRef((props, ref) => {
     toolboxItems?.forEach(item => {
       item.addEventListener('dragstart', (e: DragEvent) => {
         const target = e.target as HTMLElement;
-        e.dataTransfer?.setData('text/plain', target.dataset.command || '');
+        const command = target.dataset.command || '';
+        e.dataTransfer?.setData('text/plain', command);
         e.dataTransfer?.setData('text/html', target.outerHTML);
+        console.log('Dragging command:', command);
       });
     });
 
@@ -89,6 +91,9 @@ const BlocklyEditor = forwardRef((props, ref) => {
       
       const command = e.dataTransfer?.getData('text/plain');
       const html = e.dataTransfer?.getData('text/html');
+      
+      console.log('Dropping command:', command);
+      console.log('Dropping HTML:', html);
       
       if (command && html) {
         addBlockToWorkspace(command, html);
@@ -112,6 +117,8 @@ const BlocklyEditor = forwardRef((props, ref) => {
     const blockElement = blockDiv.firstElementChild as HTMLElement;
     
     if (blockElement) {
+      // Ensure the command data attribute is preserved
+      blockElement.setAttribute('data-command', command);
       blockElement.classList.add('workspace-block');
       blockElement.draggable = false;
       
@@ -119,10 +126,18 @@ const BlocklyEditor = forwardRef((props, ref) => {
       const deleteBtn = document.createElement('button');
       deleteBtn.innerHTML = '❌';
       deleteBtn.className = 'ml-2 text-red-500 hover:text-red-700';
-      deleteBtn.onclick = () => blockElement.remove();
+      deleteBtn.onclick = () => {
+        blockElement.remove();
+        // If no blocks left, show placeholder
+        const remainingBlocks = workspace.querySelectorAll('.workspace-block');
+        if (remainingBlocks.length === 0) {
+          workspace.innerHTML = '<p class="text-gray-500 italic">Drop blocks here to build your code!</p>';
+        }
+      };
       blockElement.appendChild(deleteBtn);
       
       workspace.appendChild(blockElement);
+      console.log('Added block with command:', command);
     }
   };
 
